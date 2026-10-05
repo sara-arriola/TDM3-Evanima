@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Evanima</title>
+  
+  <!-- Favicon: Isotipo -->
+  <link rel="icon" type="image/png" href="assets/fabicon.png">
+
+  <!-- Google Fonts: Alata -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Alata&display=swap" rel="stylesheet">
+
+  <style>
+    /* TIPOGRAFÍAS LOCALES */
+    @font-face {
+      font-family: 'Dotemp';
+      src: url('fonts/Dotemp-8bit.ttf') format('truetype');
+    }
+
+    @font-face {
+      font-family: 'PPMondwest';
+      src: url('fonts/ppmondwest-regular.otf') format('opentype');
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    /* CURSORES PERSONALIZADOS (OPCIÓN 1: PRECISIÓN TÉCNICA / LAB) */
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background-color: #121516;
+      position: relative;
+      font-family: 'PPMondwest', 'Alata', sans-serif;
+      cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><path d='M12 2v6m0 8v6M2 12h6m8 0h6' stroke='%23121516' stroke-width='3' stroke-linecap='square'/><path d='M12 2v6m0 8v6M2 12h6m8 0h6' stroke='%23EDF2EE' stroke-width='1.5' stroke-linecap='square'/><circle cx='12' cy='12' r='1.5' fill='%236DD3FA'/></svg>") 12 12, crosshair;
+    }
+
+    /* Target Selector al interactuar con elementos clave */
+    .evanito, 
+    .animus-pin, 
+    .sync-help-btn, 
+    .retro-btn-animus, 
+    .title-wrapper, 
+    .social-link {
+      cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'><path d='M7 4H4v3m17-3h3v3M4 21v3h3m17-3v3h-3' stroke='%23121516' stroke-width='3.5' stroke-linecap='square' fill='none'/><path d='M7 4H4v3m17-3h3v3M4 21v3h3m17-3v3h-3' stroke='%23A296F8' stroke-width='2' stroke-linecap='square' fill='none'/><circle cx='14' cy='14' r='2' fill='%23D7E554'/></svg>") 14 14, pointer !important;
+    }
+
+    /* CAPA 1: Fondo Holo con scanlines */
+    body::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        url('assets/fondoHolo.png'),
+        repeating-linear-gradient(
+          0deg,
+          rgba(0, 0, 0, 0.4) 0px,
+          rgba(0, 0, 0, 0.4) 1px,
+          transparent 1px,
+          transparent 3px
+        );
+      background-size: cover, auto;
+      opacity: 0.35;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* CAPA 2: Lienzo de Cables Jumpers e impulsos */
+    #jumpers-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    /* CAPA 3: Burbuja Evanthos */
+    #bubble {
+      position: absolute;
+      width: 190px;
+      height: 190px;
+      z-index: 3;
+      background-image: url('assets/burbuja.png');
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      filter: drop-shadow(0 0 15px rgba(162, 150, 248, 0.4));
+      cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'><circle cx='12' cy='12' r='7' stroke='%236DD3FA' stroke-width='1.5' fill='none' stroke-dasharray='3 2'/><circle cx='12' cy='12' r='2' fill='%23A296F8'/></svg>") 12 12, grab !important;
+    }
+
+    #bubble:active {
+      cursor: grabbing !important;
+    }
+
+    /* CAPAS SUPERIORES: LOGOTIPO */
+    .title-wrapper {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 15;
+    }
+
+    .title-img {
+      max-width: 250px;
+      height: auto;
+      display: block;
+      filter: drop-shadow(0 0 12px rgba(162, 150, 248, 0.3));
+      transition: filter 0.3s ease;
+    }
+
+    .title-wrapper:hover .title-img {
+      filter: drop-shadow(0 0 20px rgba(109, 211, 250, 0.85)) drop-shadow(0 0 8px #6DD3FA);
+    }
+
+    /* CONSTELACIÓN DE CONCEPTOS: FADE IN / FADE OUT */
+    #lore-constellation {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 4;
+      opacity: 0;
+      transition: opacity 0.25s ease-in-out;
+    }
+
+    #lore-constellation.visible {
+      opacity: 1;
+    }
+
+    .lore-word {
+      position: absolute;
+      font-family: 'PPMondwest', serif;
+      font-size: 22px;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+      text-shadow: 0 2px 6px rgba(0, 0, 0, 0.95);
+    }
+
+    .lore-word.glitching {
+      color: #c46428 !important;
+      text-shadow: 1.5px 0 #a296f8, -1.5px 0 #6dd3fa, 0 0 8px rgba(196, 100, 40, 0.6) !important;
+    }
+
+    /* EFECTO TORNASOL PASTEL PARA EVA */
+    .lore-word-eva {
+      font-size: 30px;
+      font-weight: bold;
+      background: linear-gradient(
+        115deg,
+        #5be8f5 0%,
+        #9df0ff 25%,
+        #ffffff 45%,
+        #d8b8ff 70%,
+        #f5c2f7 85%,
+        #5be8f5 100%
+      );
+      background-size: 250% 100%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shimmerEva 4.5s ease-in-out infinite alternate;
+      filter: 
+        drop-shadow(0 0 6px rgba(157, 240, 255, 0.85))
+        drop-shadow(0 0 14px rgba(216, 184, 255, 0.75));
+      display: inline-block;
+    }
+
+    @keyframes shimmerEva {
+      0% {
+        background-position: 0% 50%;
+      }
+      100% {
+        background-position: 100% 50%;
+      }
+    }
+
+    /* ANIMUS (1/2 MÁS GRANDE: 120PX) */
+    .animus-container {
+      position: absolute;
+      top: 25px;
+      left: 36%;
+      z-index: 20;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .animus-pin-wrapper {
+      position: relative;
+      display: inline-block;
+    }
+
+    .animus-pin {
+      width: 120px; /* Tamaño incrementado un 50% */
+      height: auto;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.7));
+      transition: transform 0.15s ease;
+      user-drag: none;
+      -webkit-user-drag: none;
+    }
+
+    .animus-pin:hover {
+      transform: scale(1.06);
+    }
+
+    .animus-tooltip {
+      position: absolute;
+      bottom: -24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #A296F8;
+      color: #000000;
+      font-family: 'PPMondwest', sans-serif;
+      font-size: 16px;
+      padding: 1px 8px;
+      border: 1px solid #000000;
+      white-space: nowrap;
+      display: none;
+      pointer-events: none;
+      z-index: 30;
+    }
+
+    .animus-pin-wrapper:hover .animus-tooltip {
+      display: block;
+    }
+
+    .retro-window-animus {
+      background: #edf2ee;
+      border: 4px solid #d7e554;
+      padding: 8px 12px;
+      display: none;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 3px 3px 0px #000;
+      margin-top: 15px;
+    }
+
+    .retro-window-animus.active {
+      display: flex;
+    }
+
+    .retro-input {
+      font-family: 'PPMondwest', serif;
+      font-size: 18px;
+      color: #121516;
+      padding: 4px 8px;
+      border: 2px inset #999;
+      background: #ffffff;
+      outline: none;
+      width: 170px;
+      user-select: auto;
+      transition: color 0.1s ease;
+      cursor: text;
+    }
+
+    .retro-input.glitching {
+      color: #c46428;
+      background-color: #f7e8e8;
+      text-shadow: 1px 0 #a296f8, -1px 0 #6dd3fa;
+    }
+
+    .retro-btn-animus {
+      background: #a296f8;
+      color: #121516;
+      font-family: 'PPMondwest', serif;
+      font-size: 16px;
+      border: 2px outset #ffffff;
+      padding: 3px 14px;
+    }
+
+    .retro-btn-animus:active {
+      border-style: inset;
+    }
+
+    /* WIDGET SINCRONIZACIÓN */
+    .sync-widget {
+      position: absolute;
+      bottom: 105px;
+      left: 50px;
+      background: #edf2ee;
+      border: 4px solid #d7e554;
+      padding: 12px 14px;
+      width: 315px;
+      z-index: 20;
+      box-shadow: 3px 3px 0px #000;
+    }
+
+    .sync-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .sync-logo-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      white-space: nowrap;
+    }
+
+    .sync-eye-icon {
+      width: 34px;
+      height: 34px;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+
+    .sync-text {
+      font-family: 'PPMondwest', serif;
+      font-size: 20px;
+      color: #121516;
+      white-space: nowrap;
+      line-height: 1;
+    }
+
+    .sync-help-btn {
+      background: #edf2ee;
+      border: 2px outset #ffffff;
+      font-family: 'PPMondwest', sans-serif;
+      font-weight: bold;
+      font-size: 16px;
+      padding: 0 6px;
+      line-height: 1.2;
+      transition: transform 0.15s ease, background-color 0.15s ease;
+      display: inline-block;
+    }
+
+    .sync-help-btn:hover {
+      transform: scale(1.15);
+      background: #ffffff;
+    }
+
+    .sync-help-btn:active {
+      border-style: inset;
+      transform: scale(0.95);
+    }
+
+    /* BARRA DE PROGRESO */
+    .progress-bar {
+      width: 100%;
+      height: 20px;
+      background: #ffffff;
+      border: 2px inset #aaa;
+      display: flex;
+      gap: 3px;
+      padding: 2px;
+    }
+
+    .progress-block {
+      width: 13px;
+      height: 100%;
+      background: transparent;
+      animation-duration: 2.4s;
+      animation-iteration-count: infinite;
+      animation-timing-function: steps(1);
+    }
+
+    .block-1 { animation-name: fillStep1; }
+    .block-2 { animation-name: fillStep2; }
+    .block-3 { animation-name: fillStep3; }
+    .block-4 { animation-name: fillStep4; }
+
+    @keyframes fillStep1 {
+      0%, 75% { background-color: #a296f8; }
+      100% { background-color: transparent; }
+    }
+    @keyframes fillStep2 {
+      0% { background-color: transparent; }
+      25%, 75% { background-color: #a296f8; }
+      100% { background-color: transparent; }
+    }
+    @keyframes fillStep3 {
+      0% { background-color: transparent; }
+      50%, 75% { background-color: #a296f8; }
+      100% { background-color: transparent; }
+    }
+    @keyframes fillStep4 {
+      0% { background-color: transparent; }
+      75% { background-color: #a296f8; }
+      100% { background-color: transparent; }
+    }
+
+    /* EVANITOS Y HOVER TOOLTIPS */
+    .evanito {
+      position: absolute;
+      z-index: 10;
+      transition: transform 0.15s ease;
+      display: inline-block;
+    }
+
+    .evanito:hover {
+      transform: scale(1.08);
+      z-index: 25;
+    }
+
+    .evanito img {
+      display: block;
+      user-drag: none;
+      -webkit-user-drag: none;
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
+    }
+
+    .evanito-tooltip {
+      position: absolute;
+      bottom: -24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #6dd3fa;
+      color: #000000;
+      font-family: 'PPMondwest', sans-serif;
+      font-size: 16px;
+      padding: 1px 8px;
+      border: 1px solid #000;
+      white-space: nowrap;
+      display: none;
+      pointer-events: none;
+    }
+
+    .evanito:hover .evanito-tooltip {
+      display: block;
+    }
+
+    /* FOOTER */
+    .footer-bottom-left {
+      position: absolute;
+      bottom: 14px;
+      left: 50px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 25;
+    }
+
+    .social-link {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #6dd3fa;
+      opacity: 0.85;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      text-decoration: none;
+    }
+
+    .social-link:hover {
+      opacity: 1;
+      transform: scale(1.15);
+      color: #d7e554;
+    }
+
+    .social-icon {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+
+    .footer-note {
+      color: #6dd3fa;
+      font-family: 'Alata', sans-serif;
+      font-size: 12px;
+      letter-spacing: 0.4px;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Centro: Logotipo de Evanima -->
+  <div class="title-wrapper" id="logoTrigger">
+    <img src="assets/logotipo.png" class="title-img" alt="Evanima">
+  </div>
+
+  <!-- Capa con conceptos aleatorios: Yeso, Lila, Amarillo y Cian -->
+  <div id="lore-constellation">
+    <span class="lore-word" data-color="#D7E554">Identidad</span>
+    <span class="lore-word" data-color="#EDF2EE">Animus</span>
+    <span class="lore-word" data-color="#6DD3FA">Génesis</span>
+    <span class="lore-word" data-color="#A296F8">Sincronía</span>
+    <span class="lore-word" data-color="#EDF2EE">Auroria</span>
+    <span class="lore-word" data-color="#D7E554">Simbiosis</span>
+    <span class="lore-word lore-word-eva">Eva</span>
+    <span class="lore-word" data-color="#6DD3FA">Evanitos</span>
+  </div>
+
+  <!-- SVG Overlay para Cables y Destellos -->
+  <svg id="jumpers-canvas"></svg>
+
+  <!-- Burbuja Evanthos -->
+  <div id="bubble"></div>
+
+  <!-- Animus -->
+  <div class="animus-container" id="avoid_animus">
+    <div class="animus-pin-wrapper">
+      <img src="assets/animus.png" class="animus-pin" id="node_animus" alt="Animus" onclick="handleInteractiveClick('node_animus', toggleAnimusWindow)">
+      <div class="animus-tooltip">¿sabés quién sos?</div>
+    </div>
+    <div class="retro-window-animus" id="animusWindow">
+      <input type="text" id="animusInput" class="retro-input" placeholder="Tu nombre">
+      <button class="retro-btn-animus" onclick="triggerAnimusGlitch()">Buscar</button>
+    </div>
+  </div>
+
+  <!-- Widget de Sincronización -->
+  <div class="sync-widget" id="avoid_sync">
+    <div class="sync-header">
+      <div class="sync-logo-title">
+        <img src="assets/isotipo.png" class="sync-eye-icon" alt="Isotipo">
+        <span class="sync-text">Sincronización: 20%</span>
+      </div>
+      <button class="sync-help-btn" id="node_sync_btn" onclick="handleInteractiveClick('node_sync_btn', downloadProtocol)">?</button>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-block block-1"></div>
+      <div class="progress-block block-2"></div>
+      <div class="progress-block block-3"></div>
+      <div class="progress-block block-4"></div>
+    </div>
+  </div>
+
+  <!-- Los 6 Evanitos con nombres propios del proyecto -->
+  <!-- 1. Elvaña (arriba a la izquierda) -->
+  <div id="node_elvana" class="evanito" style="top: 8%; left: 8%;" onclick="handleInteractiveClick('node_elvana', () => window.open('ficha_01.png', '_blank'))">
+    <img src="assets/evanito_04.gif" width="75" alt="Elvaña">
+    <div class="evanito-tooltip">Elvaña</div>
+  </div>
+
+  <!-- 2. Evanmiga (medio a la izquierda) -->
+  <div id="node_evanmiga" class="evanito" style="top: 38%; left: 6%;" onclick="handleInteractiveClick('node_evanmiga', () => window.open('ficha_01.png', '_blank'))">
+    <img src="assets/evanito_01.gif" width="80" alt="Evanmiga">
+    <div class="evanito-tooltip">Evanmiga</div>
+  </div>
+
+  <!-- 3. Evanarabajo (abajo al centro/izquierda) -->
+  <div id="node_evanarabajo" class="evanito" style="bottom: 14%; left: 45%;" onclick="handleInteractiveClick('node_evanarabajo', () => window.open('ficha_01.png', '_blank'))">
+    <img src="assets/evanito_03.gif" width="65" alt="Evanarabajo">
+    <div class="evanito-tooltip">Evanarabajo</div>
+  </div>
+
+  <!-- 4. Evanélula (medio a la derecha) -->
+  <div id="node_evanelula" class="evanito" style="top: 50%; right: 28%;" onclick="handleInteractiveClick('node_evanelula', () => window.open('ficha_01.png', '_blank'))">
+    <img src="assets/evanito_06.gif" width="70" alt="Evanélula">
+    <div class="evanito-tooltip">Evanélula</div>
+  </div>
+
+  <!-- 5. Mariquita (abajo a la derecha) -->
+  <div id="node_mariquita" class="evanito" style="bottom: 12%; right: 10%;" onclick="handleInteractiveClick('node_mariquita', () => window.open('ficha_01.png', '_blank'))">
+    <img src="assets/evanito_05.gif" width="75" alt="Mariquita">
+    <div class="evanito-tooltip">Mariquita</div>
+  </div>
+
+  <!-- 6. Evathra (arriba a la derecha) -->
+  <div id="node_evathra" class="evanito" style="top: 8%; right: 8%;" onclick="handleInteractiveClick('node_evathra', () => window.open('ficha_01.png', '_blank'))">
+    <img src="assets/evanito_02.gif" width="60" alt="Evathra">
+    <div class="evanito-tooltip">Evathra</div>
+  </div>
+
+  <!-- Pie de página -->
+  <div class="footer-bottom-left" id="avoid_footer">
+    <a href="https://www.instagram.com/evanima.tdm3?utm_source=ig_web_button_share_sheet&stkn=ZDNlZDc0MzIxNw==" target="_blank" rel="noopener noreferrer" class="social-link" title="Instagram @evanima.tdm3">
+      <svg class="social-icon" viewBox="0 0 24 24">
+        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+      </svg>
+    </a>
+    <span class="footer-note">* La página se actualizará todas las semanas con nueva información. Volvé pronto para descubrir más :)</span>
+  </div>
+
+  <script>
+    // 1. REVELACIÓN, POSICIONAMIENTO RANDOM Y GLITCH RECURRENTE
+    const logoTrigger = document.getElementById('logoTrigger');
+    const constellation = document.getElementById('lore-constellation');
+    const words = document.querySelectorAll('.lore-word');
+    let hoverTimer = null;
+    let glitchLoopInterval = null;
+    let glitchInitialTimer = null;
+    let activeGlitchIntervals = [];
+
+    words.forEach(w => {
+      const col = w.getAttribute('data-color');
+      if (col) w.style.color = col;
+      w.dataset.originalText = w.textContent.trim();
+    });
+
+    function restoreWords() {
+      activeGlitchIntervals.forEach(id => clearInterval(id));
+      activeGlitchIntervals = [];
+      clearTimeout(glitchInitialTimer);
+      clearInterval(glitchLoopInterval);
+      glitchLoopInterval = null;
+
+      words.forEach(word => {
+        word.textContent = word.dataset.originalText;
+        word.classList.remove('glitching');
+      });
+    }
+
+    function triggerWordsGlitch() {
+      const glitchChars = '!<>-_\\/[]{}—=+*^?#________';
+
+      words.forEach(word => {
+        const originalText = word.dataset.originalText;
+        word.classList.add('glitching');
+
+        let iterations = 0;
+        const intervalId = setInterval(() => {
+          word.textContent = originalText
+            .split('')
+            .map((char, index) => {
+              if (index < iterations) return originalText[index];
+              return glitchChars[Math.floor(Math.random() * glitchChars.length)];
+            })
+            .join('');
+
+          iterations += 1 / 2.5;
+
+          if (iterations >= originalText.length) {
+            clearInterval(intervalId);
+            word.textContent = originalText;
+            word.classList.remove('glitching');
+          }
+        }, 40);
+
+        activeGlitchIntervals.push(intervalId);
+      });
+    }
+
+    function randomizeWordPositions() {
+      const avoidSelectors = [
+        '#logoTrigger',
+        '#avoid_animus',
+        '#avoid_sync',
+        '#avoid_footer',
+        '#node_elvana',
+        '#node_evanmiga',
+        '#node_evanarabajo',
+        '#node_evanelula',
+        '#node_mariquita',
+        '#node_evathra'
+      ];
+
+      const margin = 35;
+      const occupiedBoxes = [];
+
+      avoidSelectors.forEach(sel => {
+        const el = document.querySelector(sel);
+        if (el) {
+          const r = el.getBoundingClientRect();
+          occupiedBoxes.push({
+            left: r.left - margin,
+            top: r.top - margin,
+            right: r.right + margin,
+            bottom: r.bottom + margin
+          });
+        }
+      });
+
+      const winW = window.innerWidth;
+      const winH = window.innerHeight;
+
+      words.forEach(word => {
+        const estimatedW = word.classList.contains('lore-word-eva') ? 80 : 130;
+        const estimatedH = 35;
+        let placed = false;
+        let attempts = 0;
+
+        while (!placed && attempts < 100) {
+          attempts++;
+          const testX = Math.random() * (winW - estimatedW - 100) + 50;
+          const testY = Math.random() * (winH - estimatedH - 120) + 60;
+
+          const testBox = {
+            left: testX,
+            top: testY,
+            right: testX + estimatedW,
+            bottom: testY + estimatedH
+          };
+
+          const collides = occupiedBoxes.some(box => {
+            return !(
+              testBox.right < box.left ||
+              testBox.left > box.right ||
+              testBox.bottom < box.top ||
+              testBox.top > box.bottom
+            );
+          });
+
+          if (!collides) {
+            word.style.left = testX + 'px';
+            word.style.top = testY + 'px';
+            occupiedBoxes.push({
+              left: testX - 20,
+              top: testY - 20,
+              right: testX + estimatedW + 20,
+              bottom: testY + estimatedH + 20
+            });
+            placed = true;
+          }
+        }
+      });
+    }
+
+    logoTrigger.addEventListener('mouseenter', () => {
+      hoverTimer = setTimeout(() => {
+        randomizeWordPositions();
+        constellation.classList.add('visible');
+
+        glitchInitialTimer = setTimeout(() => {
+          if (constellation.classList.contains('visible')) {
+            triggerWordsGlitch();
+
+            glitchLoopInterval = setInterval(() => {
+              triggerWordsGlitch();
+            }, 3000);
+          }
+        }, 1000);
+
+      }, 300);
+    });
+
+    logoTrigger.addEventListener('mouseleave', () => {
+      clearTimeout(hoverTimer);
+      clearTimeout(glitchInitialTimer);
+      constellation.classList.remove('visible');
+      restoreWords();
+    });
+
+    // 2. ANIMUS CON EFECTO GLITCH
+    let isGlitching = false;
+
+    function toggleAnimusWindow() {
+      const win = document.getElementById('animusWindow');
+      win.classList.toggle('active');
+      if (win.classList.contains('active')) {
+        document.getElementById('animusInput').focus();
+      }
+    }
+
+    function triggerAnimusGlitch() {
+      const input = document.getElementById('animusInput');
+      const originalText = input.value.trim();
+      if (!originalText || isGlitching) return;
+
+      isGlitching = true;
+      input.classList.add('glitching');
+
+      const glitchChars = '!<>-_\\/[]{}—=+*^?#________';
+      let iterations = 0;
+
+      const glitchInterval = setInterval(() => {
+        input.value = originalText
+          .split('')
+          .map((char, index) => {
+            if (index < iterations) return originalText[index];
+            return glitchChars[Math.floor(Math.random() * glitchChars.length)];
+          })
+          .join('');
+
+        iterations += 1 / 3;
+
+        if (iterations >= originalText.length) {
+          clearInterval(glitchInterval);
+          input.value = originalText;
+          input.classList.remove('glitching');
+          isGlitching = false;
+          
+          setTimeout(() => {
+            window.open(`https://www.google.com/search?q=${encodeURIComponent(originalText)}`, '_blank');
+          }, 150);
+        }
+      }, 35);
+    }
+
+    document.getElementById('animusInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') triggerAnimusGlitch();
+    });
+
+    // 3. DESCARGA DEL TXT DE LA GRAN SINCRONÍA
+    function downloadProtocol() {
+      const text = `=====================================================
+PROYECTO EVANIMA // ARCHIVO DE REGISTRO CLASIFICADO
+ESTADO ACTUAL: FASE 1 (20% COMPLETADO)
+=====================================================
+
+[¿QUÉ ES LA GRAN SINCRONÍA?]
+Es el acontecimiento anual de Evanima. La noche en la que
+las frecuencias de todos los habitantes en los Evanthos
+convergen en un único pulso colectivo para dar lugar a la
+BIOGÉNESIS.
+
+[EL REFUGIO: LOS EVANTHOS]
+Las mentes aisladas habitan cápsulas de aspecto similar a burbujas
+para resguardar su psique.
+Espacios para rituales colectivos donde la sinergia de las
+personas se acumula y da vida a seres híbridos tecnológicos.
+
+[EL EVENTO CÓSMICO]
+La sincronización total (100%) ocurrirá al finalizar el ciclo.
+El espacio físico abrirá sus puertas.
+Auroras en el cielo nos llamarán.
+
+Fecha: Noviembre 14 // Muestra
+Lugar: [Diag. 78 680, B1904 La Plata, Provincia de Buenos Aires]
+
+-----------------------------------------------------
+NOTA DEL SISTEMA:
+Si estás leyendo esto, aún no es demasiado tarde.
+Descubrí tu identidad; mira hacia dentro tuyo; sincronízate.
+Nos vemos en la muestra.
+=====================================================`;
+
+      const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'protocolo_sincronia.txt';
+      link.click();
+    }
+
+    // 4. FÍSICA INERCIAL Y DOBLE CLIC RÁPIDO A PINTEREST
+    const bubble = document.getElementById('bubble');
+    let posX = window.innerWidth - 240;
+    let posY = window.innerHeight * 0.35;
+    let velX = 1.8;
+    let velY = 1.2;
+    let isDragging = false;
+    let dragStartX = 0, dragStartY = 0;
+    let lastMouseX = 0, lastMouseY = 0;
+    let totalDragDist = 0;
+
+    let bubbleClicks = 0;
+    let lastClickTime = 0;
+
+    bubble.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      totalDragDist = 0;
+      dragStartX = e.clientX - posX;
+      dragStartY = e.clientY - posY;
+      lastMouseX = e.clientX;
+      lastMouseY = e.clientY;
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (isDragging) {
+        const deltaX = e.clientX - lastMouseX;
+        const deltaY = e.clientY - lastMouseY;
+        totalDragDist += Math.abs(deltaX) + Math.abs(deltaY);
+
+        posX = e.clientX - dragStartX;
+        posY = e.clientY - dragStartY;
+        velX = deltaX * 0.4;
+        velY = deltaY * 0.4;
+        lastMouseX = e.clientX;
+        lastMouseY = e.clientY;
+
+        bubble.style.left = posX + 'px';
+        bubble.style.top = posY + 'px';
+      }
+    });
+
+    window.addEventListener('mouseup', () => {
+      if (isDragging) {
+        isDragging = false;
+        velX = Math.max(-5, Math.min(5, velX || 1.5));
+        velY = Math.max(-5, Math.min(5, velY || 1.5));
+
+        // Solo cuenta como clic si casi no hubo desplazamiento (arrastre)
+        if (totalDragDist < 8) {
+          const now = Date.now();
+          if (now - lastClickTime < 380) {
+            bubbleClicks++;
+          } else {
+            bubbleClicks = 1;
+          }
+          lastClickTime = now;
+
+          // Doble clic verificado
+          if (bubbleClicks >= 2) {
+            window.open('https://pin.it/B2PQyiXk5', '_blank');
+            bubbleClicks = 0;
+          }
+        }
+      }
+    });
+
+    function animateBubble() {
+      if (!isDragging) {
+        posX += velX;
+        posY += velY;
+
+        const size = 190;
+        if (posX <= 0) { posX = 0; velX = -velX; }
+        if (posX + size >= window.innerWidth) { posX = window.innerWidth - size; velX = -velX; }
+        if (posY <= 0) { posY = 0; velY = -velY; }
+        if (posY + size >= window.innerHeight) { posY = window.innerHeight - size; velY = -velY; }
+
+        bubble.style.left = posX + 'px';
+        bubble.style.top = posY + 'px';
+      }
+      requestAnimationFrame(animateBubble);
+    }
+    animateBubble();
+
+    // 5. JUMPERS CON LOS 4 COLORES SOLICITADOS
+    const jumperColors = ['#EDF2EE', '#A296F8', '#D7E554', '#6DD3FA'];
+    let lastClickedNode = null;
+    let colorIndex = 0;
+    const connectedPairs = new Set();
+    const activeJumperPaths = [];
+
+    function handleInteractiveClick(nodeId, actionCallback) {
+      if (typeof actionCallback === 'function') {
+        actionCallback();
+      }
+
+      if (lastClickedNode && lastClickedNode !== nodeId) {
+        const pairKey = [lastClickedNode, nodeId].sort().join('-');
+        if (!connectedPairs.has(pairKey)) {
+          connectedPairs.add(pairKey);
+          drawJumper(lastClickedNode, nodeId);
+        }
+      }
+      lastClickedNode = nodeId;
+    }
+
+    function getCenter(elementId) {
+      const el = document.getElementById(elementId);
+      const rect = el.getBoundingClientRect();
+      return {
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2
+      };
+    }
+
+    function drawJumper(idA, idB) {
+      const p1 = getCenter(idA);
+      const p2 = getCenter(idB);
+
+      const dist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+      const sag = Math.min(130, dist * 0.28);
+
+      const cp1X = p1.x + (p2.x - p1.x) * 0.25;
+      const cp1Y = p1.y + (p2.y - p1.y) * 0.25 + sag;
+      const cp2X = p1.x + (p2.x - p1.x) * 0.75;
+      const cp2Y = p1.y + (p2.y - p1.y) * 0.75 + sag;
+
+      const pathData = `M ${p1.x} ${p1.y} C ${cp1X} ${cp1Y}, ${cp2X} ${cp2Y}, ${p2.x} ${p2.y}`;
+
+      const color = jumperColors[colorIndex % jumperColors.length];
+      colorIndex++;
+
+      const svg = document.getElementById('jumpers-canvas');
+
+      // Sombra
+      const shadowPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      shadowPath.setAttribute('d', pathData);
+      shadowPath.setAttribute('stroke', 'rgba(0, 0, 0, 0.65)');
+      shadowPath.setAttribute('stroke-width', '5');
+      shadowPath.setAttribute('fill', 'none');
+      shadowPath.setAttribute('stroke-linecap', 'round');
+      svg.appendChild(shadowPath);
+
+      // Cable Jumper
+      const jumperPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      jumperPath.setAttribute('d', pathData);
+      jumperPath.setAttribute('stroke', color);
+      jumperPath.setAttribute('stroke-width', '3');
+      jumperPath.setAttribute('fill', 'none');
+      jumperPath.setAttribute('stroke-linecap', 'round');
+      svg.appendChild(jumperPath);
+
+      // Terminales plásticos
+      [p1, p2].forEach(p => {
+        const pin = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        pin.setAttribute('cx', p.x);
+        pin.setAttribute('cy', p.y);
+        pin.setAttribute('r', '4');
+        pin.setAttribute('fill', '#121516');
+        pin.setAttribute('stroke', color);
+        pin.setAttribute('stroke-width', '1.5');
+        svg.appendChild(pin);
+      });
+
+      activeJumperPaths.push(jumperPath);
+    }
+
+    // 6. DESTELLOS TORNASOLADOS CON DELAY ESCALONADO
+    function spawnTornasolPulse() {
+      if (activeJumperPaths.length === 0) return;
+
+      const svg = document.getElementById('jumpers-canvas');
+
+      activeJumperPaths.forEach((path, index) => {
+        const staggerDelay = index * 320;
+
+        setTimeout(() => {
+          const pathLength = path.getTotalLength();
+          
+          const pulse = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          pulse.setAttribute('r', '5');
+          pulse.setAttribute('fill', '#6dd3fa');
+          pulse.setAttribute('stroke', '#a296f8');
+          pulse.setAttribute('stroke-width', '2');
+          pulse.style.filter = 'drop-shadow(0 0 6px #6dd3fa) drop-shadow(0 0 10px #a296f8)';
+          svg.appendChild(pulse);
+
+          let start = null;
+          const duration = 1100;
+
+          function step(timestamp) {
+            if (!start) start = timestamp;
+            const progress = (timestamp - start) / duration;
+
+            if (progress < 1) {
+              const currentPoint = path.getPointAtLength(progress * pathLength);
+              pulse.setAttribute('cx', currentPoint.x);
+              pulse.setAttribute('cy', currentPoint.y);
+              pulse.setAttribute('fill', progress > 0.5 ? '#a296f8' : '#6dd3fa');
+              requestAnimationFrame(step);
+            } else {
+              pulse.remove();
+            }
+          }
+          requestAnimationFrame(step);
+        }, staggerDelay);
+      });
+    }
+
+    setInterval(spawnTornasolPulse, 4500);
+  </script>
+</body>
+</html>
